@@ -3,69 +3,66 @@ Created on 2016年7月19日
 
 @author: Hu Chao
 '''
-from com.chaos.machineL.GradientDescent import GradientDescent
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 import com.chaos.machineL.Helper as Helper
+import com.chaos.machineL.GradientDescent as GradientDescent
 
-class LinearRegression(Helper.Helper):
+class LinearRegression(Helper.Helper, GradientDescent.GradientDescent):
     
     def __init__(self, start, end, param):
-        Helper.Helper.__init__(self, [[x, self.hypothesis([x, 1], [param, 0], True)]for x in range(start , end)])
-        self.__exampleXs = self.getExampleXs()
-        self.__exampleYs = self.getExampleYs()
-        self.__theta = self.getTheta()
-    
-    def hypothesis(self, exampleX, theta, confuse=False):
+        Helper.Helper.__init__(self, [[x, self.__hypothesis([x, 1], [param, 0])]for x in range(start , end)])
+        self.__gradient = GradientDescent.GradientDescent(self.getExampleXs(), self.getExampleYs(), self.getTheta())       
+          
+    def __hypothesis(self, exampleX, theta):
         htheta = 0
         for j, value in enumerate(exampleX):
             htheta = htheta + (theta[j] * value)
-        if not confuse:
-            return htheta
         return htheta + random.uniform(-0.5 * htheta, 0.5 * htheta)
+    
+    def hypothesis(self, exampleX, theta):
+        htheta = exampleX.dot(theta.T)
+        return htheta
+
+    def __stochasticGradient(self, exampleY, exampleX, theta):
+        return (exampleY - self.hypothesis(exampleX, theta)).dot(exampleX)
+    
+    def __batchGradient(self, theta):
+        shapeX, shapeY = self.getExampleXs().shape
+        result = np.mat([0 for x in range(0, shapeY)])
+        index = 0
+        while index < shapeX :
+            delta = self.__stochasticGradient(self.getExampleYs()[index], self.getExampleXs()[index], theta)
+            result = result + delta
+            index = index + 1
+        return result   
 
     def matrix(self):
-        xMatrix = np.mat(self.__exampleXs)
-        yMatrix = np.mat(self.__exampleYs).T
-        xMatrixT = xMatrix.T
-        resultMatrix = np.dot(np.dot(np.dot(xMatrixT, xMatrix).I, xMatrixT), yMatrix)
-        return [value for value in resultMatrix.T.A[0]]
+        return self.__exampleXs.T.dot(self.__exampleXs).I.dot(self.__exampleXs.T).dot(self.__exampleYs).T
     
-    def delta(self, exampleY, htheta):
-        return exampleY - htheta
+    def stochasticGradient(self, step):
+        return self.__gradient.stochasticGradient(self.__stochasticGradient, step)
     
-    def distance(self, src, dest):
-        result = 0
-        maxLen = len(dest)
-        if len(src) > len(dest):
-            maxLen = len(src)
-        for index in range(0, maxLen):
-            if index >= len(src):
-                result = result + np.power(dest[index], 2)
-            elif index >= len(dest):
-                result = result + np.power(src[index], 2)
-            else:
-                result = result + np.power((dest[index] - src[index]), 2)
-        return np.sqrt(result)
+    def batchGradient(self, step, divisor):
+        return self.__gradient.batchGradient(self.__batchGradient, step, divisor)
 
 if __name__ == '__main__':
     linearRe = LinearRegression(1, 200, 5.5)
-    gd = GradientDescent(linearRe)
     originPointX = [value[0] for value in linearRe.getExamples()]
     originPointY = [value[1] for value in linearRe.getExamples()]
     plt.plot(originPointX, originPointY, 'ro')
     x = np.linspace(0, 200, 1000)
-    stochastic = gd.stochasticGradientDescent(0.000005)
+    stochastic = linearRe.stochasticGradient(0.000005)
     print(stochastic)
-    stochasticY = [linearRe.hypothesis([value,1], stochastic) for value in x]
+    stochasticY = [linearRe.hypothesis(np.mat([value,1]), stochastic).A[0] for value in x]
     plt.plot(x, stochasticY, 'r')
-    batch = gd.batchGradientDescent(0.000005, 1000000)
+    batch = linearRe.batchGradient(0.0000005, 10)
     print(batch)  
     batchY = [linearRe.hypothesis([value,1], batch) for value in x]
     plt.plot(x, batchY, 'g')
     matrix = linearRe.matrix()
     print(matrix)
-    matrixY = [linearRe.hypothesis([value,1], matrix) for value in x]
+    matrixY = [linearRe.hypothesis(np.mat([value,1]), matrix).A[0] for value in x]
     plt.plot(x, matrixY, 'b')
     plt.show()

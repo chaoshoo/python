@@ -6,8 +6,8 @@ Created on 2016年7月21日
 
 import copy
 import random
-import bigfloat
 from bigfloat.core import BigFloat
+import numpy as np
 class Helper(object):
     '''
     classdocs
@@ -20,13 +20,16 @@ class Helper(object):
         '''
         self.__examples = examples;  
         self.__exampleXs, self.__exampleYs = self.__createExampleXYs(self.__examples)
-        self.__theta = self.__initTheta()    
+        self.__theta = self.__initTheta()  
+        self.__exampleXs = np.mat(self.__exampleXs)
+        self.__exampleYs = np.mat(self.__exampleYs).T
+        self.__theta = np.mat(self.__theta)
         
     def __initTheta(self):
         theta = [];
         for exampleX in self.__exampleXs:
             while len(exampleX) > len(theta):
-                theta.append(random.uniform(0, 100));
+                theta.append(random.uniform(10, 100));
         return theta;
         
     def __createExampleXY(self, example):

@@ -3,51 +3,65 @@ Created on 2016年7月13日
 
 @author: Hu Chao
 '''
-import math
 import copy
-import numpy
+import numpy as np;
 class GradientDescent(object):
     '''
     classdocs
     '''
 
 
-    def __init__(self, regression):
+    def __init__(self, exampleXs, exampleYs, theta):
         '''
         Constructor
         '''
-        self.__regression = regression
+        self.__exampleXs = exampleXs
+        self.__exampleYs = exampleYs
+        self.__theta = theta    
+          
         
-    def stochasticGradientDescent(self, step):
-        theta = copy.deepcopy(self.__regression.getTheta())
-        for index, exampleX in enumerate(self.__regression.getExampleXs()):
-            exampleY = self.__regression.getExampleYs()[index]
-            delta = self.__regression.delta(exampleY, self.__regression.hypothesis(exampleX, theta))
-            for xIndex, xValue in enumerate(exampleX):
-                theta[xIndex] = theta[xIndex] + step * delta * xValue
+    def stochasticGradient(self, gradient, step):
+        theta = copy.deepcopy(self.__theta)
+        shapeX, shapeY = self.__exampleXs.shape
+        index = 0
+        while index < shapeX :
+            delta = gradient(self.__exampleYs[index], self.__exampleXs[index], theta)
+            theta = theta + delta * step
+            index = index + 1
         return theta
     
-    def batchGradientDescent(self, step, divisor):
-        theta = copy.deepcopy(self.__regression.getTheta())
-        oldTheta = copy.deepcopy(self.__regression.getTheta())
+    def batchGradient(self, gradient, step, divisor):
+        theta = copy.deepcopy(self.__theta)
+        oldTheta = copy.deepcopy(self.__theta)
         count = 0
         while step > 0:
             while count < 10000:
-                deltas = []
-                for index, exampleX in enumerate(self.__regression.getExampleXs()):
-                    exampleY = self.__regression.getExampleYs()[index]
-                    delta = self.__regression.delta(exampleY, self.__regression.hypothesis(exampleX, theta))
-                    deltas.append(delta) 
-                for thetaIndex, thetaValue in enumerate(theta):
-                    for deltaIndex, deltaValue in enumerate(deltas):
-                        theta[thetaIndex] = thetaValue + step * deltaValue * self.__regression.getExampleXs()[deltaIndex][thetaIndex]
-                if self.__regression.distance(theta, oldTheta) < (step / divisor):
+                delta = gradient(theta)
+                theta = theta + delta * step
+                if self.__distance(theta, oldTheta) < (step / divisor):
                     return theta
                 count = count + 1  
                 oldTheta = copy.deepcopy(theta)
             step = step / 10  
             count = 0 
         return []
+    
+    
+    def __distance(self, src, dest):
+        result = 0
+        src = src.getA1()
+        dest = dest.getA1()
+        maxLen = len(dest)
+        if len(src) > len(dest):
+            maxLen = len(src)
+        for index in range(0, maxLen):
+            if index >= len(src):
+                result = result + np.abs(dest[index])
+            elif index >= len(dest):
+                result = result + np.abs(src[index])
+            else:
+                result = result + np.abs((dest[index] - src[index]))
+        return np.sqrt(result)
         
         
     
