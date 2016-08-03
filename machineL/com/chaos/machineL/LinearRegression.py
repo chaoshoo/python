@@ -29,10 +29,10 @@ class LinearRegression(Helper.Helper, GradientDescent.GradientDescent):
         return (exampleY - self.hypothesis(exampleX, theta)).dot(exampleX)
     
     def __batchGradient(self, theta):
-        shapeX, shapeY = self.getExampleXs().shape
-        result = np.mat([0 for x in range(0, shapeY)])
+        column, row = self.getExampleXs().shape
+        result = np.mat([0 for x in range(0, row)])
         index = 0
-        while index < shapeX :
+        while index < column :
             delta = self.__stochasticGradient(self.getExampleYs()[index], self.getExampleXs()[index], theta)
             result = result + delta
             index = index + 1

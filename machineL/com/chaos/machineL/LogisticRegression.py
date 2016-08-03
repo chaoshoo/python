@@ -13,7 +13,7 @@ from com.chaos.machineL import GradientDescent
 
 class LogisticRegression(Helper.Helper):
     def __init__(self, start, end, param):
-        Helper.Helper.__init__(self, [[x / 1000, self.__hypothesis([x / 1000,0], [param,0])]for x in range(start , end)])
+        Helper.Helper.__init__(self, [[x / 1000, self.__hypothesis([x / 1000, 1], [param, 0])]for x in range(start , end)])
         self.__gradient = GradientDescent.GradientDescent(self.getExampleXs(), self.getExampleYs(), self.getTheta())  
           
     def __hypothesis(self, exampleX, theta):
@@ -30,20 +30,20 @@ class LogisticRegression(Helper.Helper):
         return (exampleY - self.hypothesis(exampleX, theta)).dot(exampleX)
     
     def __batchGradient(self, theta):
-        shapeX, shapeY = self.getExampleXs().shape
-        result = np.mat([0 for x in range(0, shapeY)])
+        column, row = self.getExampleXs().shape
+        result = np.mat([0 for x in range(0, row)])
         index = 0
-        while index < shapeX :
+        while index < column :
             delta = self.__stochasticGradient(self.getExampleYs()[index], self.getExampleXs()[index], theta)
             result = result + delta
             index = index + 1
         return result        
      
     def __hessian(self, theta):
-        shapeX, shapeY = theta.shape
-        hessionA = np.zeros((shapeY,shapeY))  
-        for i in range(0, shapeY):
-            for j in range(0, shapeY):
+        column, row = theta.shape
+        hessionA = np.zeros((row,row))  
+        for i in range(0, row):
+            for j in range(0, row):
                 hessionA[i][j] = self.__hessionElement(i, j, theta).getA1()[0]
         return np.mat(hessionA)
         
