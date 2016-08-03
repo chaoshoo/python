@@ -14,23 +14,15 @@ class Helper(object):
     '''
 
 
-    def __init__(self, examples):
+    def __init__(self, examples, initTheta):
         '''
         Constructor
         '''
         self.__examples = examples;  
         self.__exampleXs, self.__exampleYs = self.__createExampleXYs(self.__examples)
-        self.__theta = self.__initTheta()  
-        self.__exampleXs = np.mat(self.__exampleXs)
+        self.__theta = initTheta(self.__exampleXs)  
+        self.__exampleXs = np.mat(self.__exampleXs).T
         self.__exampleYs = np.mat(self.__exampleYs).T
-        self.__theta = np.mat(self.__theta)
-        
-    def __initTheta(self):
-        theta = [];
-        for exampleX in self.__exampleXs:
-            while len(exampleX) > len(theta):
-                theta.append(random.uniform(10, 100));
-        return theta;
         
     def __createExampleXY(self, example):
         exampleY = self.__copy(example[-1])

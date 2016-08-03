@@ -10,10 +10,17 @@ import numpy as np;
 import copy
 import com.chaos.machineL.Helper as Helper
 from com.chaos.machineL import GradientDescent
-
+        
+def initTheta(exampleXs):
+    theta = [];
+    for exampleX in exampleXs:
+        while len(exampleX) > len(theta):
+            theta.append(random.uniform(10, 100));
+    return np.mat(theta).T
+    
 class LogisticRegression(Helper.Helper):
     def __init__(self, start, end, param):
-        Helper.Helper.__init__(self, [[x / 1000, self.__hypothesis([x / 1000, 1], [param, 0])]for x in range(start , end)])
+        Helper.Helper.__init__(self, [[x / 1000, self.__hypothesis([x / 1000, 1], [param, 0])]for x in range(start , end)], initTheta)
         self.__gradient = GradientDescent.GradientDescent(self.getExampleXs(), self.getExampleYs(), self.getTheta())  
           
     def __hypothesis(self, exampleX, theta):
@@ -23,38 +30,41 @@ class LogisticRegression(Helper.Helper):
         return 1 / (1 + np.exp(-1 * htheta + random.uniform(-0.8 * htheta, 0.8* htheta)));  
         
     def hypothesis(self, exampleX, theta):
-        htheta = exampleX.dot(theta.T);
+        htheta = theta.T.dot(exampleX);
         return 1 / (1 + np.exp(-1 * htheta));
 
     def __stochasticGradient(self, exampleY, exampleX, theta):
-        return (exampleY - self.hypothesis(exampleX, theta)).dot(exampleX)
+        return (exampleX).dot(exampleY - self.hypothesis(exampleX, theta))
     
     def __batchGradient(self, theta):
-        column, row = self.getExampleXs().shape
-        result = np.mat([0 for x in range(0, row)])
+        row, column = self.getExampleXs().shape
+        result = np.mat([0 for x in range(0, row)]).T
         index = 0
         while index < column :
-            delta = self.__stochasticGradient(self.getExampleYs()[index], self.getExampleXs()[index], theta)
+            delta = self.__stochasticGradient(self.getExampleYs()[index], self.getExampleXs().T[index].T, theta)
             result = result + delta
             index = index + 1
         return result        
      
     def __hessian(self, theta):
-        column, row = theta.shape
+        row, column = theta.shape
         hessionA = np.zeros((row,row))  
         for i in range(0, row):
             for j in range(0, row):
-                hessionA[i][j] = self.__hessionElement(i, j, theta).getA1()[0]
+                hessionA[i][j] = self.__hessionElement(i, j, theta)
         return np.mat(hessionA)
         
     def __hessionElement(self, i, j, theta):
         result = 0
         h = self.hypothesis(self.getExampleXs(), theta)
         h = h - np.power(h, 2)        
-        shapeX, shapeY = h.shape
+        row, column = h.shape
         index = 0
-        while index < shapeX :
-            result = result - self.getExampleXs()[index].getA1()[i] * self.getExampleXs()[index].getA1()[j] * h[index]
+        while index < column :
+#             print(self.getExampleXs().T[index].getA1()[i])
+#             print(self.getExampleXs().T[index].getA1()[j])
+#             print(h)
+            result = result - self.getExampleXs().T[index].getA1()[i] * self.getExampleXs().T[index].getA1()[j] * h.getA1()[index]
             index = index + 1        
         return result;
     
@@ -66,7 +76,7 @@ class LogisticRegression(Helper.Helper):
                 hession = self.__hessian(theta)
                 hessionI = hession.I
                 gradient = self.__batchGradient(theta)
-                theta = theta - gradient.dot(hessionI)
+                theta = theta - hessionI.dot(gradient)
                 count = count - 1
         finally:
             print(count)
@@ -87,15 +97,15 @@ if __name__ == '__main__':
     plt.plot(originPointX, originPointY, 'ro');
     stochastic = logisticRe.stochasticGradient(0.0001);
     print(stochastic);
-    stochasticY = [logisticRe.hypothesis(np.mat([value,1]), stochastic).A[0] for value in x]
+    stochasticY = [logisticRe.hypothesis(np.mat([value,1]).T, stochastic).A[0] for value in x]
     plt.plot(x, stochasticY, 'g');
-    batch = logisticRe.batchGradient(0.0001, 0.000001);
+    batch = logisticRe.batchGradient(0.0001, 0.00001);
     print(batch);  
-    batchY = [logisticRe.hypothesis(np.mat([value,1]), batch).A[0] for value in x];
+    batchY = [logisticRe.hypothesis(np.mat([value,1]).T, batch).A[0] for value in x];
     plt.plot(x, batchY, 'b');
     newton = logisticRe.newton().T.getA1()
     print(newton)
-    newtonY = [logisticRe.hypothesis(np.mat([value,1]), newton).A[0] for value in x];
+    newtonY = [logisticRe.hypothesis(np.mat([value,1]).T, newton).A[0] for value in x];
     plt.plot(x, newtonY, 'r');
     plt.show();
 

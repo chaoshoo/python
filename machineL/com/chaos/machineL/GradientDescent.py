@@ -22,10 +22,10 @@ class GradientDescent(object):
         
     def stochasticGradient(self, gradient, step):
         theta = copy.deepcopy(self.__theta)
-        column, row = self.__exampleXs.shape
+        row, column = self.__exampleXs.shape
         index = 0
         while index < column :
-            delta = gradient(self.__exampleYs[index], self.__exampleXs[index], theta)
+            delta = gradient(self.__exampleYs[index], self.__exampleXs.T[index].T, theta)
             theta = theta + delta * step
             index = index + 1
         return theta
